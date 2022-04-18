@@ -108,13 +108,14 @@ public class Benchmark {
                 StandardOpenOption.CREATE)) {
             bw.write(csvLine.append("\n").toString());
         }
-        for (long id : startIds) {
-            System.out.println("Running query for id: " + id);
+        for (int i = 0; i < startIds.size(); i++) {
+            long id = startIds.get(i);
+            System.out.printf("Running query for id: %d (%d/%d)%n", id, i + 1, startIds.size());
 
             LongLongImmutablePair stat = statsForQuery(query.getQuery(), id, iters, printMetrics, dir);
             long average = stat.leftLong();
             long elements = stat.rightLong();
-            double perElement = elements !=0 ? 1.0 * average / elements : 0;
+            double perElement = elements != 0 ? 1.0 * average / elements : 0;
             totalMs += average;
             if (max < average) {
                 max = average;
