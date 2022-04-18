@@ -1,7 +1,6 @@
 package org.softwareheritage.graph.tinkerpop;
 
 import com.martiansoftware.jsap.*;
-import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalMetrics;

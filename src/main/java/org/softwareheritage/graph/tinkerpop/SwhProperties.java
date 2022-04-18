@@ -43,7 +43,7 @@ public class SwhProperties {
         String path = graph.getPath();
         loadEdgeLabelNames(path);
         SimpleWebGraphPropertyProvider provider = getProvider(graph);
-        ArcLabelEdgeProperty<DirEntry[]> edgeProperty = new ArcLabelEdgeProperty<>(graph.getForwardGraph().getLabelledGraph());
+        ArcLabelEdgeProperty<DirEntry[]> edgeProperty = new ArcLabelEdgeProperty<>(graph.getForwardGraph());
         provider.addEdgeProperty(edgeProperty);
         provider.addEdgeProperty(new ArcLabelEdgeSubProperty<>("dir_entry_str", edgeProperty, dirEntryStr()));
         provider.addEdgeProperty(new ArcLabelEdgeSubProperty<>("filenames", edgeProperty, filenames()));
