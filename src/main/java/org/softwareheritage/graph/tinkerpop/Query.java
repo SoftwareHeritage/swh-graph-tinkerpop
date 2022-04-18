@@ -126,4 +126,20 @@ public class Query {
                      }));
     }
 
+    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Edge>> snapshotRevisions(long snapshot) {
+        return g -> g.withSideEffect("a", new HashSet<>())
+                     .V(snapshot)
+                     .repeat(__.aggregate("a")
+                               .outE().as("e")
+                               .inV().hasLabel("REV", "SNP", "REL"))
+                     .until(__.or(
+                             __.not(__.out().hasLabel("REV", "REL")),
+                             __.where(P.within("a"))))
+                     .path()
+                     .select("e")
+                     .<Edge>unfold()
+                     .dedup()
+                ;
+    }
+
 }
