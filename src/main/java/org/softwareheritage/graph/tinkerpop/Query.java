@@ -76,12 +76,8 @@ public class Query {
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> originOfEarliestContainingRevision(long revision) {
         return g -> g.withSideEffect("a", new HashSet<>())
-                     .withSideEffect("b", new HashSet<>())
                      .V(revision)
                      .repeat(__.in().dedup().where(P.without("a")).aggregate("a"))
-                     .emit(__.hasLabel("REV"))
-                     .dedup()
-                     .repeat(__.in().dedup().where(P.without("b")).aggregate("b"))
                      .until(__.hasLabel("ORI"));
     }
 

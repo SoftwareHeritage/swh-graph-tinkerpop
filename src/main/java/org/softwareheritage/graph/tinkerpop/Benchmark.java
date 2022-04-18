@@ -40,7 +40,7 @@ public class Benchmark {
 
     private final Map<String, Supplier<BenchmarkQuery>> queries = Map.of(
             "earliestContainingCommit", EarliestContainingCommit::new,
-            "OriginOfEarliestContainingRevision", OriginOfEarliestContainingRevision::new,
+            "originOfEarliestContainingRevision", OriginOfEarliestContainingRevision::new,
             "recursiveContentPathsWithPermissions", RecursiveContentPathsWithPermissions::new,
             "snapshotRevisionsWithBranches", SnapshotRevisionsWithBranches::new);
 
