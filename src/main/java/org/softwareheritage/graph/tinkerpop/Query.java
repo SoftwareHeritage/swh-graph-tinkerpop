@@ -3,7 +3,6 @@ package org.softwareheritage.graph.tinkerpop;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Path;
-import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
@@ -34,12 +33,12 @@ public class Query {
     }
 
     /**
-     * Finds all commits, which contain the provided dir/file.
+     * Finds all revisions, which contain the provided dir/content vertex.
      *
-     * @param v the id of the dir/file vertex.
-     * @return all containing commit vertices.
+     * @param v the id of the dir/content vertex.
+     * @return all containing revision vertices.
      */
-    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> containingCommits(long v) {
+    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> containingRevisions(long v) {
         return g -> g.withSideEffect("a", new HashSet<>())
                      .V(v)
                      .repeat(__.in().dedup().where(P.without("a")).aggregate("a"))
@@ -48,30 +47,30 @@ public class Query {
     }
 
     /**
-     * Finds up to {@code limit} earliest commits, which contain the provided dir/file.
+     * Finds up to {@code limit} earliest revisions, which contain the provided dir/content vertex.
      *
-     * @param v     the id of the dir/file vertex.
-     * @param limit the number of commits to find.
-     * @return up to {@code limit} earliest commits, containing the specified dir/file.
+     * @param v     the id of the dir/content vertex.
+     * @param limit the number of revisions to find.
+     * @return up to {@code limit} earliest revisions, containing the specified dir/content vertex.
      */
-    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> earliestContainingCommits(long v, long limit) {
-        return containingCommits(v).andThen(g -> g.order().by("author_timestamp", Order.asc).limit(limit));
+    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> earliestContainingRevisions(long v, long limit) {
+        return containingRevisions(v).andThen(g -> g.order().by("author_timestamp", Order.asc).limit(limit));
     }
 
     /**
-     * Find the earliest containing commit of the provided dir/file.
+     * Find the earliest containing revision of the provided dir/content vertex.
      *
-     * @param v the id of the dir/file vertex.
-     * @return earliest containing commit vertex.
+     * @param v the id of the dir/content vertex.
+     * @return earliest containing revision vertex.
      */
-    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> earliestContainingCommit(long v) {
-        return earliestContainingCommits(v, 1);
+    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> earliestContainingRevision(long v) {
+        return earliestContainingRevisions(v, 1);
     }
 
     /**
-     * Finds an origin of the earliest containing revision of the provided dir/file.
+     * Finds an origin of the earliest containing revision of the provided dir/content vertex.
      *
-     * @param revision the id of the dir/file vertex.
+     * @param revision the id of the dir/content vertex.
      * @return an origin vertex.
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> originOfEarliestContainingRevision(long revision) {
