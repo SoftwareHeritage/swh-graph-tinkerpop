@@ -69,15 +69,15 @@ public class Query {
     }
 
     /**
-     * Finds an origin of the earliest containing commit of the provided dir/file.
+     * Finds an origin of the earliest containing revision of the provided dir/file.
      *
-     * @param v the id of the dir/file vertex.
+     * @param revision the id of the dir/file vertex.
      * @return an origin vertex.
      */
-    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> originOfEarliestContainingCommit(long v) {
+    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> originOfEarliestContainingRevision(long revision) {
         return g -> g.withSideEffect("a", new HashSet<>())
                      .withSideEffect("b", new HashSet<>())
-                     .V(v)
+                     .V(revision)
                      .repeat(__.in().dedup().where(P.without("a")).aggregate("a"))
                      .emit(__.hasLabel("REV"))
                      .dedup()
