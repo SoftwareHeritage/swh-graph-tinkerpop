@@ -13,8 +13,6 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Query {
     /**
@@ -121,20 +119,22 @@ public class Query {
                             .fold())
                      .flatMap(path -> {
                          List<SwhProperties.DirEntryString[]> pathDirs = path.get();
-                         String dir = pathDirs
-                                 .stream()
-                                 .limit(pathDirs.size() - 1)
-                                 .map(dirs -> dirs[0].filename) // parent path should not have duplicate edges
-                                 .collect(Collectors.joining("/"));
-                         if (!dir.isEmpty()) {
-                             dir += "/";
+                         StringBuilder dir = new StringBuilder();
+                         for (int i = 0; i < pathDirs.size() - 1; i++) {
+                             dir.append(pathDirs.get(i)[0].filename) // parent path should not have duplicate edges
+                                .append("/");
                          }
-                         String finalDir = dir;
-                         return Arrays.stream(pathDirs.get(pathDirs.size() - 1))
-                                      .map(entry ->
-                                              String.format("%s%s [perms: %s]", finalDir, entry.filename,
-                                                      entry.permission))
-                                      .iterator();
+                         SwhProperties.DirEntryString[] last = pathDirs.get(pathDirs.size() - 1);
+                         if (last.length == 1) {
+                             var entry = last[0];
+                             return List.of(String.format("%s%s [perms: %s]", dir, entry.filename, entry.permission))
+                                        .iterator();
+                         }
+                         List<String> res = new ArrayList<>();
+                         for (SwhProperties.DirEntryString entry : last) {
+                             res.add(String.format("%s%s [perms: %s]", dir, entry.filename, entry.permission));
+                         }
+                         return res.iterator();
                      }));
     }
 
@@ -175,12 +175,14 @@ public class Query {
 
                          String edgeStr = String.format("(%s -> %s)", outId, inId);
                          if (outLabel.equals("SNP")) {
-                             List<String> branches = (List<String>) edgeElementMap.get("filenames");
-                             return branches.stream()
-                                            .map(branch -> edgeStr + " " + branch)
-                                            .iterator();
+                             String[] branches = (String[]) edgeElementMap.get("filenames");
+                             List<String> res = new ArrayList<>(branches.length);
+                             for (String branch : branches) {
+                                 res.add(edgeStr + " " + branch);
+                             }
+                             return res.iterator();
                          }
-                         return Stream.of(edgeStr).iterator();
+                         return List.of(edgeStr).iterator();
                      })
         );
     }

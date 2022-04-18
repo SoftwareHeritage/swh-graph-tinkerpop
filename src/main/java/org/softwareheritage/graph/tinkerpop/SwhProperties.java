@@ -47,7 +47,6 @@ public class SwhProperties {
         provider.addEdgeProperty(edgeProperty);
         provider.addEdgeProperty(new ArcLabelEdgeSubProperty<>("dir_entry_str", edgeProperty, dirEntryStr()));
         provider.addEdgeProperty(new ArcLabelEdgeSubProperty<>("filenames", edgeProperty, filenames()));
-        provider.addEdgeProperty(new ArcLabelEdgeSubProperty<>("filename", edgeProperty, singleFilename()));
         return provider;
     }
 
@@ -64,27 +63,19 @@ public class SwhProperties {
         };
     }
 
-    private static ArcLabelEdgeSubPropertyGetter<DirEntry[], List<String>> filenames() {
+    private static ArcLabelEdgeSubPropertyGetter<DirEntry[], String[]> filenames() {
         return dirEntries -> {
             if (dirEntries.length == 0) {
                 return null;
             }
-            List<String> res = new ArrayList<>();
-            for (DirEntry dirEntry : dirEntries) {
-                res.add(getFilename(dirEntry));
+            String[] res = new String[dirEntries.length];
+            for (int i = 0; i < dirEntries.length; i++) {
+                res[i] = getFilename(dirEntries[i]);
             }
             return res;
         };
     }
 
-    private static ArcLabelEdgeSubPropertyGetter<DirEntry[], String> singleFilename() {
-        return dirEntries -> {
-            if (dirEntries.length != 1) {
-                return null;
-            }
-            return getFilename(dirEntries[0]);
-        };
-    }
 
     private static String getFilename(DirEntry dirEntry) {
         return new String(Base64.getDecoder().decode(edgeLabelNames.getArray(dirEntry.filenameId)));
