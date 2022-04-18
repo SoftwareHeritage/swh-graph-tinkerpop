@@ -11,10 +11,7 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -81,6 +78,21 @@ public class Query {
     }
 
     /**
+     * Finds all revisions, which contain the provided dir/content vertex and are older than the given threshold.
+     *
+     * @param v   the id of the dir/content vertex.
+     * @param max limit for revision time.
+     * @return all containing revision vertices.
+     */
+    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> revisionsEarlierThan(long v, long max) {
+        return g -> g.withSideEffect("a", new HashSet<>())
+                     .V(v)
+                     .repeat(__.in().dedup().where(P.without("a")).aggregate("a"))
+                     .emit(__.hasLabel("REV").has("author_timestamp", P.lt(max)))
+                     .dedup();
+    }
+
+    /**
      * Returns all paths in a revision/directory subtree.
      * <p>
      * If the passed vertex is a revision, makes one step to the associated directory vertex.
@@ -138,7 +150,7 @@ public class Query {
                      .repeat(__.outE()
                                .where(P.without("e"))
                                .aggregate("e")
-                               .inV().hasLabel("REV",  "REL"))
+                               .inV().hasLabel("REV", "REL"))
                      .until(__.not(__.out().hasLabel("REV", "REL")))
                      .<Edge>cap("e")
                      .unfold();
@@ -158,7 +170,8 @@ public class Query {
                          Map<Object, Object> edgeElementMap = edgeElementMapTraverser.get();
                          long outId = (long) ((Map<Object, Object>) edgeElementMap.get(Direction.OUT)).get(T.id);
                          long inId = (long) ((Map<Object, Object>) edgeElementMap.get(Direction.IN)).get(T.id);
-                         String outLabel = (String) ((Map<Object, Object>) edgeElementMap.get(Direction.OUT)).get(T.label);
+                         String outLabel = (String) ((Map<Object, Object>) edgeElementMap.get(Direction.OUT)).get(
+                                 T.label);
 
                          String edgeStr = String.format("(%s -> %s)", outId, inId);
                          if (outLabel.equals("SNP")) {
