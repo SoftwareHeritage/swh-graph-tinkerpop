@@ -140,10 +140,10 @@ public class Query {
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Edge>> snapshotRevisions(long snapshot) {
         return g -> g.withSideEffect("e", new HashSet<>())
                      .V(snapshot)
-                     .repeat(__.outE().aggregate("e")
-                               .and(__.where(P.without("e")),
-                                       __.inV().hasLabel("REV", "SNP", "REL"))
-                               .inV())
+                     .repeat(__.outE()
+                               .where(P.without("e"))
+                               .aggregate("e")
+                               .inV().hasLabel("REV",  "REL"))
                      .until(__.not(__.out().hasLabel("REV", "REL")))
                      .<Edge>cap("e")
                      .unfold();
