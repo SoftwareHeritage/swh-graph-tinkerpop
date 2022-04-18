@@ -6,14 +6,18 @@ import org.apache.tinkerpop.gremlin.process.traversal.Path;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
+import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Query {
     /**
@@ -126,20 +130,51 @@ public class Query {
                      }));
     }
 
+    /**
+     * Returns all edges under a snapshot, pointing to revisions and releases.
+     *
+     * @param snapshot the root snapshot
+     * @return revisions relationships in snapshot subtree
+     */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Edge>> snapshotRevisions(long snapshot) {
-        return g -> g.withSideEffect("a", new HashSet<>())
+        return g -> g.withSideEffect("e", new HashSet<>())
                      .V(snapshot)
-                     .repeat(__.aggregate("a")
-                               .outE().as("e")
-                               .inV().hasLabel("REV", "SNP", "REL"))
-                     .until(__.or(
-                             __.not(__.out().hasLabel("REV", "REL")),
-                             __.where(P.within("a"))))
-                     .path()
-                     .select("e")
-                     .<Edge>unfold()
-                     .dedup()
-                ;
+                     .repeat(__.outE()
+                               .and(__.where(P.without("e")),
+                                       __.inV().hasLabel("REV", "SNP", "REL"))
+                               .aggregate("e")
+                               .inV())
+                     .until(__.not(__.out().hasLabel("REV", "REL")))
+                     .<Edge>cap("e")
+                     .unfold();
+    }
+
+    /**
+     * Lists all snapshot, revision, and release relationships.
+     * If the relationship is snp -> *, outputs the branch name.
+     *
+     * @param snapshot the snapshot to list
+     * @return revisions in snapshot subtree
+     */
+    public static Function<GraphTraversalSource, GraphTraversal<Vertex, String>> snapshotRevisionsWithBranches(long snapshot) {
+        return snapshotRevisions(snapshot).andThen(edges ->
+                edges.elementMap("filenames")
+                     .flatMap(edgeElementMapTraverser -> {
+                         Map<Object, Object> edgeElementMap = edgeElementMapTraverser.get();
+                         long outId = (long) ((Map<Object, Object>) edgeElementMap.get(Direction.OUT)).get(T.id);
+                         long inId = (long) ((Map<Object, Object>) edgeElementMap.get(Direction.IN)).get(T.id);
+                         String outLabel = (String) ((Map<Object, Object>) edgeElementMap.get(Direction.OUT)).get(T.label);
+
+                         String edgeStr = String.format("(%s -> %s)", outId, inId);
+                         if (outLabel.equals("SNP")) {
+                             List<String> branches = (List<String>) edgeElementMap.get("filenames");
+                             return branches.stream()
+                                            .map(branch -> edgeStr + " " + branch)
+                                            .iterator();
+                         }
+                         return Stream.of(edgeStr).iterator();
+                     })
+        );
     }
 
 }
