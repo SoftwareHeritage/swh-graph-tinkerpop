@@ -1,6 +1,7 @@
 package org.softwareheritage.graph.tinkerpop;
 
 import com.martiansoftware.jsap.*;
+import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.util.TraversalMetrics;
@@ -11,6 +12,7 @@ import org.webgraph.tinkerpop.structure.provider.SimpleWebGraphPropertyProvider;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -52,21 +54,12 @@ public class Benchmark {
 
         System.out.println("Loading graph...");
         SwhBidirectionalGraph swhGraph = SwhBidirectionalGraph.loadLabelled(path);
-        SimpleWebGraphPropertyProvider swh = org.softwareheritage.graph.tinkerpop.SwhProperties.getProvider(swhGraph);
+        SimpleWebGraphPropertyProvider swh = SwhProperties.withEdgeLabels(swhGraph);
         WebGraphGraph graph = WebGraphGraph.open(swhGraph, swh, path);
         Benchmark benchmark = new Benchmark(graph, samples, iters);
         System.out.println("Done");
 
-        if (argument != -1) {
-            System.out.println("Argument provided, running query once");
-            benchmark.runQueryByName(query, argument);
-        } else if (query.equals("earliestContainingCommit")) {
-            benchmark.earliestContainingCommit();
-        } else if (query.equals("recursiveContentPathsWithPermissions")) {
-            benchmark.recursiveContentPathsWithPermissions();
-        } else {
-            System.out.println("Unknown query: " + query);
-        }
+        benchmark.runQueryByName(query, argument);
     }
 
     public Benchmark(WebGraphGraph graph, long samples, int iters) {
@@ -76,14 +69,19 @@ public class Benchmark {
         this.e = new WebgraphGremlinQueryExecutor(graph);
     }
 
+    private void snapshotRevisionsWithBranches() {
+        List<Long> startIds = randomVerticesWithLabel("SNP", samples);
+        profileVertexQuery(startIds, Query::snapshotRevisionsWithBranches);
+    }
+
     private void recursiveContentPathsWithPermissions() {
         List<Long> startIds = randomVerticesWithLabel("REV", samples);
-        profileVertexQuery(startIds, org.softwareheritage.graph.tinkerpop.Query::recursiveContentPathsWithPermissions);
+        profileVertexQuery(startIds, Query::recursiveContentPathsWithPermissions);
     }
 
     private void earliestContainingCommit() {
         List<Long> startIds = randomVerticesWithLabel("CNT", samples);
-        profileVertexQuery(startIds, org.softwareheritage.graph.tinkerpop.Query::earliestContainingCommit);
+        profileVertexQuery(startIds, Query::earliestContainingCommit);
     }
 
     private <S, E> void profileVertexQuery(List<Long> startIds, Function<Long, Function<GraphTraversalSource, GraphTraversal<S, E>>> query) {
@@ -103,14 +101,31 @@ public class Benchmark {
             totalMs += average;
             System.out.printf("Average for id: %d - %dms%n%n", id, average);
         }
-        System.out.printf("Average: - %dms%n%n", totalMs / samples);
+        System.out.printf("Average: - %dms%n%n", totalMs / startIds.size());
     }
 
     private void runQueryByName(String name, long arg) {
+        if (arg != -1) {
+            System.out.println("Argument provided, running query once for id: " + arg);
+        }
         if (name.equals("earliestContainingCommit")) {
-            profile(org.softwareheritage.graph.tinkerpop.Query.earliestContainingCommit(arg));
+            if (arg == -1) {
+                earliestContainingCommit();
+            } else {
+                profile(Query.earliestContainingCommit(arg));
+            }
         } else if (name.equals("recursiveContentPathsWithPermissions")) {
-            profile(org.softwareheritage.graph.tinkerpop.Query.recursiveContentPathsWithPermissions(arg));
+            if (arg == -1) {
+                recursiveContentPathsWithPermissions();
+            } else {
+                profile(Query.recursiveContentPathsWithPermissions(arg));
+            }
+        } else if (name.equals("snapshotRevisionsWithBranches")) {
+            if (arg == -1) {
+                snapshotRevisionsWithBranches();
+            } else {
+                profile(Query.snapshotRevisionsWithBranches(arg));
+            }
         } else {
             System.out.println("Unknown query name: " + name);
         }
@@ -122,7 +137,7 @@ public class Benchmark {
 
     private List<Long> randomVerticesWithLabel(String label, long count) {
         return e.get(g -> g.V().hasLabel(label)
-//                           .order().by(Order.shuffle)
+                           .order().by(Order.shuffle)
                            .limit(count)
                            .id().map(id -> (long) id.get()));
     }
