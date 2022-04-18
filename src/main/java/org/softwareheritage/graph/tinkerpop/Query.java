@@ -3,6 +3,7 @@ package org.softwareheritage.graph.tinkerpop;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Path;
+import org.apache.tinkerpop.gremlin.process.traversal.Pop;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
@@ -139,10 +140,9 @@ public class Query {
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Edge>> snapshotRevisions(long snapshot) {
         return g -> g.withSideEffect("e", new HashSet<>())
                      .V(snapshot)
-                     .repeat(__.outE()
+                     .repeat(__.outE().aggregate("e")
                                .and(__.where(P.without("e")),
                                        __.inV().hasLabel("REV", "SNP", "REL"))
-                               .aggregate("e")
                                .inV())
                      .until(__.not(__.out().hasLabel("REV", "REL")))
                      .<Edge>cap("e")
@@ -176,5 +176,4 @@ public class Query {
                      })
         );
     }
-
 }
