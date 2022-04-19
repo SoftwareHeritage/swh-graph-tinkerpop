@@ -42,7 +42,9 @@ public class Benchmark {
             "earliestContainingRevision", EarliestContainingRevision::new,
             "originOfRevision", OriginOfRevision::new,
             "recursiveContentPathsWithPermissions", RecursiveContentPathsWithPermissions::new,
-            "snapshotRevisionsWithBranches", SnapshotRevisionsWithBranches::new);
+            "snapshotRevisionsWithBranches", SnapshotRevisionsWithBranches::new,
+            "uniqueOriginVertices", UniqueOriginVertices::new
+    );
 
     public static void main(String[] args) throws IOException, JSAPException {
         SimpleJSAP jsap = new SimpleJSAP(Benchmark.class.getName(),
@@ -270,6 +272,23 @@ public class Benchmark {
         @Override
         public List<Long> generateStartingPoints() {
             return randomVerticesWithLabel("SNP", samples);
+        }
+    }
+
+    private class UniqueOriginVertices implements BenchmarkQuery<Long, Vertex, Vertex> {
+        @Override
+        public String getName() {
+            return "uniqueOriginVertices";
+        }
+
+        @Override
+        public Function<Long, Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>>> getQuery() {
+            return Query::uniqueOriginVertices;
+        }
+
+        @Override
+        public List<Long> generateStartingPoints() {
+            return randomVerticesWithLabel("ORI", samples);
         }
     }
 

@@ -187,4 +187,23 @@ public class Query {
                      })
         );
     }
+
+    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> uniqueOriginVertices(long origin) {
+        return g -> g.withSideEffect("candidates", new HashSet<Vertex>())
+                     .withSideEffect("v", new HashSet<Vertex>())
+                     .withSideEffect("others", new HashSet<Vertex>())
+                     .V(origin)
+                     .repeat(__.out().where(P.without("candidates")).aggregate("candidates"))
+                     .until(__.not(__.out()))
+                     .dedup()
+                     .repeat(__.in().where(P.without("v")).aggregate("v"))
+                     .until(__.hasLabel("ORI"))
+                     .dedup()
+                     .filter(__.not(__.id().is(origin)))
+//                     .repeat(__.out().where(P.without("others")).aggregate("others"))
+//                     .cap("candidates")
+//                     .<Vertex>unfold()
+//                     .where(P.without("others"))
+                ;
+    }
 }
