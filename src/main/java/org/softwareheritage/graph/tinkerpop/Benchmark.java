@@ -39,8 +39,8 @@ public class Benchmark {
     private final int iters;
 
     private final Map<String, Supplier<BenchmarkQuery>> queries = Map.of(
-            "earliestContainingRevision", EarliestContainingCommit::new,
-            "originOfRevision", OriginOfEarliestContainingRevision::new,
+            "earliestContainingRevision", EarliestContainingRevision::new,
+            "originOfRevision", OriginOfRevision::new,
             "recursiveContentPathsWithPermissions", RecursiveContentPathsWithPermissions::new,
             "snapshotRevisionsWithBranches", SnapshotRevisionsWithBranches::new);
 
@@ -205,7 +205,7 @@ public class Benchmark {
     }
 
 
-    private class EarliestContainingCommit implements BenchmarkQuery<Long, Vertex, Vertex> {
+    private class EarliestContainingRevision implements BenchmarkQuery<Long, Vertex, Vertex> {
         @Override
         public String getName() {
             return "earliestContainingRevision";
@@ -222,7 +222,7 @@ public class Benchmark {
         }
     }
 
-    private class OriginOfEarliestContainingRevision implements BenchmarkQuery<Long, Vertex, Vertex> {
+    private class OriginOfRevision implements BenchmarkQuery<Long, Vertex, Vertex> {
         @Override
         public String getName() {
             return "originOfRevision";

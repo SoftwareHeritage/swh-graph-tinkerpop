@@ -149,9 +149,8 @@ public class Query {
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Edge>> snapshotRevisions(long snapshot) {
         return g -> g.withSideEffect("e", new HashSet<>())
                      .V(snapshot)
-                     .repeat(__.outE()
-                               .and(__.where(P.without("e")),
-                                       __.inV().hasLabel("REV", "REL"))
+                     .repeat(__.outE().where(P.without("e"))
+                               .where(__.inV().hasLabel("REV", "REL"))
                                .aggregate("e")
                                .inV().dedup())
                      .<Edge>cap("e")
