@@ -147,16 +147,13 @@ public class Query {
      * @return revisions relationships in snapshot subtree
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Edge>> snapshotRevisions(long snapshot) {
-        AtomicInteger i = new AtomicInteger();
         return g -> g.withSideEffect("e", new HashSet<>())
-                     .withSideEffect("v", new HashSet<>())
                      .V(snapshot)
-                     .repeat(__.outE().sideEffect(edgeTraverser -> System.out.println(i.getAndIncrement()))
-                               .where(P.without("e"))
-                               .where(__.inV().hasLabel("REV", "REL"))
+                     .repeat(__.outE()
+                               .and(__.where(P.without("e")),
+                                       __.inV().hasLabel("REV", "REL"))
                                .aggregate("e")
-                               .inV().where(P.without("v")).aggregate("v"))
-//                     .until(vertexTraverser -> false)
+                               .inV().dedup())
                      .<Edge>cap("e")
                      .unfold();
     }
