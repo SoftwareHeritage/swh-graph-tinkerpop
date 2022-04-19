@@ -12,6 +12,7 @@ import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 public class Query {
@@ -146,13 +147,16 @@ public class Query {
      * @return revisions relationships in snapshot subtree
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Edge>> snapshotRevisions(long snapshot) {
+        AtomicInteger i = new AtomicInteger();
         return g -> g.withSideEffect("e", new HashSet<>())
+                     .withSideEffect("v", new HashSet<>())
                      .V(snapshot)
-                     .repeat(__.outE()
+                     .repeat(__.outE().sideEffect(edgeTraverser -> System.out.println(i.getAndIncrement()))
                                .where(P.without("e"))
+                               .where(__.inV().hasLabel("REV", "REL"))
                                .aggregate("e")
-                               .inV().hasLabel("REV", "REL"))
-                     .until(__.not(__.out().hasLabel("REV", "REL")))
+                               .inV().where(P.without("v")).aggregate("v"))
+//                     .until(vertexTraverser -> false)
                      .<Edge>cap("e")
                      .unfold();
     }
