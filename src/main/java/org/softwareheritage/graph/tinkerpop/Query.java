@@ -68,7 +68,7 @@ public class Query {
      * @param revision the id of the dir/content vertex.
      * @return an origin vertex.
      */
-    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> originOfEarliestContainingRevision(long revision) {
+    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> originOfRevision(long revision) {
         return g -> g.withSideEffect("a", new HashSet<>())
                      .V(revision)
                      .repeat(__.in().dedup().where(P.without("a")).aggregate("a"))
@@ -100,8 +100,9 @@ public class Query {
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Path>> revisionContentPaths(long root) {
         return g -> g.V(root).choose(__.hasLabel("REV"), __.out().hasLabel("DIR"))
-                     .repeat(__.outE().inV())
-                     .emit()
+                     .repeat(__.outE()
+                               .inV().choose(__.hasLabel("REV"), __.out().hasLabel("DIR")))
+                     .emit(__.hasLabel("DIR", "CNT"))
                      .path();
     }
 
