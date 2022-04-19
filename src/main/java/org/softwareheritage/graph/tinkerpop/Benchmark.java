@@ -126,6 +126,7 @@ public class Benchmark {
         }
         System.out.printf("Average time: %dms%n", totalMs / startIds.size());
         System.out.printf("Max time: %dms for id %d%n", max, maxId);
+        System.out.println("Results saved at: " + dir);
     }
 
     private <S, E> LongLongImmutablePair statsForQuery(Function<Long, Function<GraphTraversalSource, GraphTraversal<S, E>>> query, Long id, long iters, boolean printMetrics, Path dir) throws IOException {
