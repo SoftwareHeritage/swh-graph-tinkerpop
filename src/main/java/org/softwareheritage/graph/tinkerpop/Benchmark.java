@@ -98,8 +98,10 @@ public class Benchmark {
         Files.createDirectories(dir);
         System.out.println("Results will be saved at: " + dir);
         long totalMs = 0;
-        long max = 0;
+        long totalElements = 0;
+        long maxMs = 0;
         long maxId = 0;
+        long maxElements = 0;
         StringBuilder csvLine = new StringBuilder("id,elements");
         for (int i = 0; i < iters; i++) {
             csvLine.append(",").append("run").append(i + 1);
@@ -117,15 +119,19 @@ public class Benchmark {
             long elements = stat.rightLong();
             double perElement = elements != 0 ? 1.0 * average / elements : 0;
             totalMs += average;
-            if (max < average) {
-                max = average;
+            totalElements += elements;
+            if (maxMs < average) {
+                maxMs = average;
                 maxId = id;
+                maxElements = elements;
             }
-            System.out.printf("Average for id: %d - %dms%n", id, average);
-            System.out.printf("Per result: %.2fms%n%n", perElement);
+            System.out.printf("Average for id: %d - %dms. Per element: %.2fms (%d elements)%n%n", id, average,
+                    perElement, elements);
         }
-        System.out.printf("Average time: %dms%n", totalMs / startIds.size());
-        System.out.printf("Max time: %dms for id %d%n", max, maxId);
+        System.out.printf("Average time: %dms. Per element: %.2fms%n", totalMs / startIds.size(),
+                1.0 * totalMs / totalElements);
+        System.out.printf("Max time: %dms for id %d. Per element: %.2fms (%d elements)%n", maxMs, maxId,
+                1.0 * maxMs / maxElements, maxElements);
         System.out.println("Results saved at: " + dir);
     }
 
