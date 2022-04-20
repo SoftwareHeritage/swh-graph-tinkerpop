@@ -12,7 +12,6 @@ import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 public class Query {
@@ -188,24 +187,39 @@ public class Query {
         );
     }
 
-    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> uniqueOriginVertices(long origin) {
+    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> uniqueOriginVerticesOld(long origin) {
         HashSet<Vertex> value = new HashSet<>();
         HashSet<Vertex> candidates = new HashSet<>();
         return g -> g.withSideEffect("candidates", candidates)
-                     .withSideEffect("v", value)
                      .withSideEffect("others", new HashSet<Vertex>())
+                     .withSideEffect("v", value)
                      .V(origin)
-                     .repeat(__.out().where(P.without("candidates")).aggregate("candidates"))
-                     .until(__.not(__.out()))
-                     .dedup()
+                     .repeat(__.out().dedup().where(P.without("candidates")).aggregate("candidates"))
+                     .until(__.not(__.out())).dedup()
                      .repeat(__.in().dedup().where(P.without("v")).aggregate("v"))
-                     .until(__.hasLabel("ORI"))
-                     .dedup()
+                     .until(__.hasLabel("ORI")).dedup()
                      .filter(__.not(__.id().is(origin)))
                      .repeat(__.out().dedup().where(P.without("others")).aggregate("others"))
-                     .cap("candidates")
-                     .<Vertex>unfold()
-                     .where(P.without("others"))
+                     .cap("candidates").<Vertex>unfold().where(P.without("others"))
+                ;
+    }
+
+    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> uniqueOriginVertices(long origin) {
+        HashSet<Vertex> candidates = new HashSet<>();
+        HashSet<Vertex> others = new HashSet<>();
+        HashSet<Vertex> value = new HashSet<>();
+        return g -> g.withSideEffect("candidates", candidates)
+                     .withSideEffect("others", others)
+                     .withSideEffect("v", value)
+                     .V(origin)
+                     .repeat(__.out().dedup().where(P.without("candidates")).aggregate("candidates"))
+                     .until(__.not(__.out())).dedup()
+                     .as("leaf")
+                     .repeat(__.in())
+                     .until(__.or(__.hasLabel("REL").not(__.id().is(origin)),
+                                      __.where(P.within("others")))
+                              .sideEffect(__.path().from("leaf").unfold().aggregate("others")))
+                     .cap("candidates").<Vertex>unfold().where(P.without("others"))
                 ;
     }
 }
