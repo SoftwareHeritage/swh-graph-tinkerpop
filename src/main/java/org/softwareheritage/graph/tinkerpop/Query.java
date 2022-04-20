@@ -201,11 +201,11 @@ public class Query {
                      .repeat(__.in().dedup().where(P.without("v")).aggregate("v"))
                      .until(__.hasLabel("ORI"))
                      .dedup()
-//                     .filter(__.not(__.id().is(origin)))
-//                     .repeat(__.out().where(P.without("others")).aggregate("others"))
-//                     .cap("candidates")
-//                     .<Vertex>unfold()
-//                     .where(P.without("others"))
+                     .filter(__.not(__.id().is(origin)))
+                     .repeat(__.out().where(P.without("others")).aggregate("others"))
+                     .cap("candidates")
+                     .<Vertex>unfold()
+                     .where(P.without("others"))
                 ;
     }
 }
