@@ -202,7 +202,7 @@ public class Query {
                      .until(__.hasLabel("ORI"))
                      .dedup()
                      .filter(__.not(__.id().is(origin)))
-                     .repeat(__.out().where(P.without("others")).aggregate("others"))
+                     .repeat(__.out().dedup().where(P.without("others")).aggregate("others"))
                      .cap("candidates")
                      .<Vertex>unfold()
                      .where(P.without("others"))
