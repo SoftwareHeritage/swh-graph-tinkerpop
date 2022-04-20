@@ -59,7 +59,8 @@ public class Benchmark {
                         new FlaggedOption("samples", JSAP.INTEGER_PARSER, "10", JSAP.NOT_REQUIRED, 's', "samples",
                                 "The number of samples picked for the query."),
                         new FlaggedOption("argument", JSAP.LONG_PARSER, "-1", JSAP.NOT_REQUIRED, 'a', "argument",
-                                "If present, profiles the query with the argument, instead of doing iterations."),});
+                                "If present, profiles the query with the argument, instead of doing iterations."),
+                        new Switch("print", 'p', "print")});
 
         JSAPResult config = jsap.parse(args);
         if (jsap.messagePrinted()) {
@@ -71,6 +72,7 @@ public class Benchmark {
         int iters = config.getInt("iters");
         int samples = config.getInt("samples");
         long argument = config.getLong("argument");
+        boolean print = config.getBoolean("print");
 
         System.out.println("Loading graph...");
         SwhBidirectionalGraph swhGraph = SwhBidirectionalGraph.loadLabelled(path);
@@ -79,7 +81,7 @@ public class Benchmark {
         Benchmark benchmark = new Benchmark(graph, samples, iters);
         System.out.println("Done");
 
-        benchmark.runQueryByName(query, argument);
+        benchmark.runQueryByName(query, argument, print);
     }
 
     public Benchmark(WebGraphGraph graph, long samples, int iters) {
@@ -175,17 +177,22 @@ public class Benchmark {
         return metrics1.get(metrics1.size() - 1);
     }
 
-    private void runQueryByName(String name, long arg) throws IOException {
+    private void runQueryByName(String name, long arg, boolean print) throws IOException {
         if (!queries.containsKey(name)) {
             System.out.println("Unknown query name: " + name);
             return;
         }
         BenchmarkQuery query = queries.get(name).get();
-
         boolean printMetrics = false;
         List<Long> startIds;
         if (arg != -1) {
             System.out.println("Argument provided, running query once for id: " + arg);
+            if (print) {
+                System.out.println("Printing results:\n");
+                Function apply = (Function) query.getQuery().apply(arg);
+                e.print(apply);
+                return;
+            }
             startIds = List.of(arg);
             printMetrics = true;
         } else {
