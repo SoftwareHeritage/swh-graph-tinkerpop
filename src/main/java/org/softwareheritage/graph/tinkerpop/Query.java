@@ -189,17 +189,19 @@ public class Query {
     }
 
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> uniqueOriginVertices(long origin) {
-        return g -> g.withSideEffect("candidates", new HashSet<Vertex>())
-                     .withSideEffect("v", new HashSet<Vertex>())
+        HashSet<Vertex> value = new HashSet<>();
+        HashSet<Vertex> candidates = new HashSet<>();
+        return g -> g.withSideEffect("candidates", candidates)
+                     .withSideEffect("v", value)
                      .withSideEffect("others", new HashSet<Vertex>())
                      .V(origin)
                      .repeat(__.out().where(P.without("candidates")).aggregate("candidates"))
                      .until(__.not(__.out()))
                      .dedup()
-                     .repeat(__.in().where(P.without("v")).aggregate("v"))
+                     .repeat(__.in().dedup().where(P.without("v")).aggregate("v"))
                      .until(__.hasLabel("ORI"))
                      .dedup()
-                     .filter(__.not(__.id().is(origin)))
+//                     .filter(__.not(__.id().is(origin)))
 //                     .repeat(__.out().where(P.without("others")).aggregate("others"))
 //                     .cap("candidates")
 //                     .<Vertex>unfold()
