@@ -187,7 +187,7 @@ public class Query {
         );
     }
 
-    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> uniqueOriginVerticesOld(long origin) {
+    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> uniqueOriginVerticesSlow(long origin) {
         HashSet<Vertex> value = new HashSet<>();
         HashSet<Vertex> candidates = new HashSet<>();
         return g -> g.withSideEffect("candidates", candidates)
@@ -204,7 +204,7 @@ public class Query {
                 ;
     }
 
-    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> uniqueOriginVertices(long origin) {
+    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> uniqueOriginVerticesBad(long origin) {
         HashSet<Vertex> candidates = new HashSet<>();
         HashSet<Vertex> others = new HashSet<>();
         HashSet<Vertex> value = new HashSet<>();
@@ -213,13 +213,39 @@ public class Query {
                      .withSideEffect("v", value)
                      .V(origin)
                      .repeat(__.out().dedup().where(P.without("candidates")).aggregate("candidates"))
-                     .until(__.not(__.out())).dedup()
+                     .emit()
+                     .dedup()
                      .as("leaf")
-                     .repeat(__.in())
+                     .sideEffect(x -> System.out.println(x + "!"))
+                     .repeat(__.in().sideEffect(System.out::println))
                      .until(__.or(__.hasLabel("REL").not(__.id().is(origin)),
                                       __.where(P.within("others")))
-                              .sideEffect(__.path().from("leaf").unfold().aggregate("others")))
+                              .sideEffect(__.path()
+                                            .from("leaf")
+                                            .sideEffect(System.out::println)
+                                            .unfold()
+                                            .aggregate("others")))
                      .cap("candidates").<Vertex>unfold().where(P.without("others"))
+                ;
+    }
+
+    public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> uniqueOriginVertices(long origin) {
+        HashSet<Vertex> good = new HashSet<>();
+        HashSet<Vertex> bad = new HashSet<>();
+        return g -> g.withSideEffect("bad", bad)
+                     .withSideEffect("good", good)
+                     .V(origin).aggregate("good")
+                     .repeat(__.out().where(P.without("bad")).where(P.without("good"))
+                               .choose(
+                                       __.in().or(__.where(P.within("bad")), __.hasLabel("REL").not(__.id().is(origin))),  // if exists bad parent
+                                       __.aggregate("bad"), // add to bad set
+                                       __.choose(
+                                               __.in().where(P.without("good")), // if no bad parents, but not all good - undefined parents exist
+                                               __.sideEffect(x -> System.out.println(x + " not yet defined")), // undefined vertex
+                                               __.aggregate("good")))
+                     ) // otherwise, good vertex
+                .cap("good")
+                .unfold()
                 ;
     }
 }
