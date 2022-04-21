@@ -237,15 +237,15 @@ public class Query {
                      .V(origin).aggregate("good")
                      .repeat(__.out().where(P.without("bad")).where(P.without("good"))
                                .choose(
-                                       __.in().or(__.where(P.within("bad")), __.hasLabel("REL").not(__.id().is(origin))),  // if exists bad parent
+                                       __.in()
+                                         .or(__.where(P.within("bad")), __.hasLabel("ORI").not(__.id().is(origin))),
+                                       // if exists bad parent
                                        __.aggregate("bad"), // add to bad set
                                        __.choose(
-                                               __.in().where(P.without("good")), // if no bad parents, but not all good - undefined parents exist
-                                               __.sideEffect(x -> System.out.println(x + " not yet defined")), // undefined vertex
-                                               __.aggregate("good")))
-                     ) // otherwise, good vertex
-                .cap("good")
-                .unfold()
+                                               __.not(__.in().where(P.without("good"))), // if all good parents
+                                               __.aggregate("good")))) // good vertex
+                     .cap("good")
+                     .unfold()
                 ;
     }
 }
