@@ -1,7 +1,7 @@
 package org.softwareheritage.graph.tinkerpop;
 
 import org.softwareheritage.graph.SwhBidirectionalGraph;
-import org.webgraph.tinkerpop.WebgraphGremlinQueryExecutor;
+import org.webgraph.tinkerpop.GremlinQueryExecutor;
 import org.webgraph.tinkerpop.structure.WebGraphGraph;
 import org.webgraph.tinkerpop.structure.provider.SimpleWebGraphPropertyProvider;
 
@@ -22,7 +22,7 @@ public class Server {
         SimpleWebGraphPropertyProvider swh = SwhProperties.getProvider(graph);
         try (var gg = WebGraphGraph.open(graph, swh, path)) {
             System.out.println("Opened graph: " + path);
-            var executor = new WebgraphGremlinQueryExecutor(gg);
+            var executor = new GremlinQueryExecutor(gg);
             if (profile) {
                 executor.profile(query);
             } else {

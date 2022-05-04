@@ -12,7 +12,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.softwareheritage.graph.Node;
 import org.softwareheritage.graph.SwhBidirectionalGraph;
 import org.softwareheritage.graph.labels.DirEntry;
-import org.webgraph.tinkerpop.WebgraphGremlinQueryExecutor;
+import org.webgraph.tinkerpop.GremlinQueryExecutor;
 import org.webgraph.tinkerpop.structure.WebGraphGraph;
 import org.webgraph.tinkerpop.structure.provider.SimpleWebGraphPropertyProvider;
 
@@ -38,7 +38,7 @@ public class Benchmark {
 
     private final WebGraphGraph graph;
     private final SwhBidirectionalGraph swhGraph;
-    private final WebgraphGremlinQueryExecutor e;
+    private final GremlinQueryExecutor e;
     private final long samples;
     private final int iters;
 
@@ -96,7 +96,7 @@ public class Benchmark {
         this.swhGraph = swhGraph;
         this.samples = samples;
         this.iters = iters;
-        this.e = new WebgraphGremlinQueryExecutor(graph);
+        this.e = new GremlinQueryExecutor(graph);
     }
 
     private <S, E> void profileVertexQuery(List<Long> startIds, BenchmarkQuery query, boolean printMetrics) throws IOException {
