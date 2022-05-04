@@ -62,6 +62,8 @@ public class Benchmark {
                                 "The number of iterations on a single query."),
                         new FlaggedOption("samples", JSAP.INTEGER_PARSER, "10", JSAP.NOT_REQUIRED, 's', "samples",
                                 "The number of samples picked for the query."),
+                        new FlaggedOption("cache", JSAP.INTEGER_PARSER, "100000", JSAP.NOT_REQUIRED, 'c', "cache",
+                                "The size of edge cache."),
                         new FlaggedOption("argument", JSAP.LONG_PARSER, "-1", JSAP.NOT_REQUIRED, 'a', "argument",
                                 "If present, profiles the query with the argument, instead of doing iterations."),
                         new Switch("print", 'p', "print")});
@@ -75,6 +77,7 @@ public class Benchmark {
         String query = config.getString("query");
         int iters = config.getInt("iters");
         int samples = config.getInt("samples");
+        int cache = config.getInt("cache");
         long argument = config.getLong("argument");
         boolean print = config.getBoolean("print");
 
@@ -84,7 +87,7 @@ public class Benchmark {
         swhGraph.loadAuthorTimestamps();
 
         SimpleWebGraphPropertyProvider swh = SwhProperties.withEdgeLabels(swhGraph);
-        WebGraphGraph graph = WebGraphGraph.open(swhGraph, swh, path);
+        WebGraphGraph graph = WebGraphGraph.open(swhGraph, swh, path, cache);
         Benchmark benchmark = new Benchmark(graph, swhGraph, samples, iters);
         System.out.println("Done");
 
