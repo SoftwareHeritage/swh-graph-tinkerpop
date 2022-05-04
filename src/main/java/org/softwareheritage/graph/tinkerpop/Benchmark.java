@@ -87,7 +87,7 @@ public class Benchmark {
         swhGraph.loadAuthorTimestamps();
 
         SimpleWebGraphPropertyProvider swh = SwhProperties.withEdgeLabels(swhGraph);
-        WebGraphGraph graph = WebGraphGraph.open(swhGraph, swh, path, cache);
+        WebGraphGraph graph = WebGraphGraph.open(swhGraph, swh, path);
         Benchmark benchmark = new Benchmark(graph, swhGraph, samples, iters);
         System.out.println("Done");
 
