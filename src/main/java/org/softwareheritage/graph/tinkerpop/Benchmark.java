@@ -63,8 +63,10 @@ public class Benchmark {
                                 "The number of iterations on a single query."),
                         new FlaggedOption("samples", JSAP.INTEGER_PARSER, "10", JSAP.NOT_REQUIRED, 's', "samples",
                                 "The number of samples picked for the query."),
-                        new FlaggedOption("cache", JSAP.INTEGER_PARSER, "100000", JSAP.NOT_REQUIRED, 'c', "cache",
+                        new FlaggedOption("ecache", JSAP.INTEGER_PARSER, "100000", JSAP.NOT_REQUIRED, 'e', "ecache",
                                 "The size of edge cache."),
+                        new FlaggedOption("vcache", JSAP.INTEGER_PARSER, "100000", JSAP.NOT_REQUIRED, 'v', "vcache",
+                                "The size of vertex cache."),
                         new FlaggedOption("argument", JSAP.LONG_PARSER, "-1", JSAP.NOT_REQUIRED, 'a', "argument",
                                 "If present, profiles the query with the argument, instead of doing iterations."),
                         new Switch("print", 'p', "print")});
@@ -78,7 +80,8 @@ public class Benchmark {
         String query = config.getString("query");
         int iters = config.getInt("iters");
         int samples = config.getInt("samples");
-        int cache = config.getInt("cache");
+        int vcache = config.getInt("vcache");
+        int ecache = config.getInt("ecache");
         long argument = config.getLong("argument");
         boolean print = config.getBoolean("print");
 
@@ -88,7 +91,7 @@ public class Benchmark {
         swhGraph.loadAuthorTimestamps();
 
         SimpleWebGraphPropertyProvider swh = SwhProperties.withEdgeLabels(swhGraph);
-        WebGraphGraph graph = WebGraphGraph.open(swhGraph, swh, path, cache);
+        WebGraphGraph graph = WebGraphGraph.open(swhGraph, swh, path, vcache, ecache);
         Benchmark benchmark = new Benchmark(graph, swhGraph, samples, iters);
         System.out.println("Done");
 
@@ -130,7 +133,6 @@ public class Benchmark {
             System.out.printf("Running query for id: %d (%d/%d)%n", id, i + 1, startIds.size());
 
             Stats stat = statsForQuery(query, id, iters, printMetrics, dir);
-            System.out.println(getHeapMemoryUsage() + " mb");
             long average = stat.average;
             long elements = stat.elements;
             long nativeTime = stat.nativeTime;
@@ -190,7 +192,7 @@ public class Benchmark {
         }, false);
         System.out.println("Native time: " + nativeTime + "ms");
         csvLine.append(",").append(nativeTime);
-        long memory = getHeapMemoryUsage();
+        long memory = Utils.getHeapMemoryUsage();
         csvLine.append(",").append(memory);
         try (BufferedWriter bw = Files.newBufferedWriter(dir.resolve("table.csv"), StandardCharsets.UTF_8,
                 StandardOpenOption.APPEND)) {
@@ -464,12 +466,6 @@ public class Benchmark {
         List<T> generateStartingPoints();
 
         long nativeImpl(long id);
-    }
-
-    private static final long BYTE_TO_MB_CONVERSION_VALUE = 1024 * 1024;
-
-    private long getHeapMemoryUsage() {
-        return ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() / BYTE_TO_MB_CONVERSION_VALUE;
     }
 
 }
