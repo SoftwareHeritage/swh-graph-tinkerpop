@@ -18,6 +18,7 @@ import org.webgraph.tinkerpop.structure.provider.SimpleWebGraphPropertyProvider;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -87,7 +88,7 @@ public class Benchmark {
         swhGraph.loadAuthorTimestamps();
 
         SimpleWebGraphPropertyProvider swh = SwhProperties.withEdgeLabels(swhGraph);
-        WebGraphGraph graph = WebGraphGraph.open(swhGraph, swh, path);
+        WebGraphGraph graph = WebGraphGraph.open(swhGraph, swh, path, cache);
         Benchmark benchmark = new Benchmark(graph, swhGraph, samples, iters);
         System.out.println("Done");
 
@@ -119,6 +120,7 @@ public class Benchmark {
             csvLine.append(",").append("run").append(i + 1);
         }
         csvLine.append(",").append("native");
+        csvLine.append(",").append("memory");
         try (BufferedWriter bw = Files.newBufferedWriter(dir.resolve("table.csv"), StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE)) {
             bw.write(csvLine.append("\n").toString());
@@ -128,9 +130,11 @@ public class Benchmark {
             System.out.printf("Running query for id: %d (%d/%d)%n", id, i + 1, startIds.size());
 
             Stats stat = statsForQuery(query, id, iters, printMetrics, dir);
+            System.out.println(getHeapMemoryUsage() + " mb");
             long average = stat.average;
             long elements = stat.elements;
             long nativeTime = stat.nativeTime;
+            long memory = stat.memory;
 
             double perElement = elements != 0 ? 1.0 * average / elements : 0;
             totalMs += average;
@@ -141,8 +145,8 @@ public class Benchmark {
                 maxId = id;
                 maxElements = elements;
             }
-            System.out.printf("Average for id: %d - %dms. Per element: %.2fms (%d elements)%n%n", id, average,
-                    perElement, elements);
+            System.out.printf("Average for id: %d - %dms. Per element: %.2fms (%d elements). Memory: %d MB%n%n", id,
+                    average, perElement, elements, memory);
         }
         System.out.printf("Average time: %dms. Per element: %.2fms%n", totalMs / startIds.size(),
                 1.0 * totalMs / totalElements);
@@ -186,22 +190,26 @@ public class Benchmark {
         }, false);
         System.out.println("Native time: " + nativeTime + "ms");
         csvLine.append(",").append(nativeTime);
+        long memory = getHeapMemoryUsage();
+        csvLine.append(",").append(memory);
         try (BufferedWriter bw = Files.newBufferedWriter(dir.resolve("table.csv"), StandardCharsets.UTF_8,
                 StandardOpenOption.APPEND)) {
             bw.write(csvLine.append("\n").toString());
         }
-        return new Stats(totalMsPerId / iters, elements, nativeTime);
+        return new Stats(totalMsPerId / iters, elements, nativeTime, memory);
     }
 
     static class Stats {
         long average;
         long elements;
         long nativeTime;
+        long memory;
 
-        public Stats(long average, long elements, long nativeTime) {
+        public Stats(long average, long elements, long nativeTime, long memory) {
             this.average = average;
             this.elements = elements;
             this.nativeTime = nativeTime;
+            this.memory = memory;
         }
     }
 
@@ -456,6 +464,12 @@ public class Benchmark {
         List<T> generateStartingPoints();
 
         long nativeImpl(long id);
+    }
+
+    private static final long BYTE_TO_MB_CONVERSION_VALUE = 1024 * 1024;
+
+    private long getHeapMemoryUsage() {
+        return ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() / BYTE_TO_MB_CONVERSION_VALUE;
     }
 
 }
