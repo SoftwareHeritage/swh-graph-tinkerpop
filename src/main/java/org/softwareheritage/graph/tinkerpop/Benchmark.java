@@ -118,7 +118,7 @@ public class Benchmark {
         long maxMs = 0;
         long maxId = 0;
         long maxElements = 0;
-        StringBuilder csvLine = new StringBuilder("id,elements");
+        StringBuilder csvLine = new StringBuilder("id,noutput,elements");
         for (int i = 0; i < iters; i++) {
             csvLine.append(",").append("run").append(i + 1);
         }
@@ -169,6 +169,7 @@ public class Benchmark {
         Files.createDirectories(idDir);
         long nativeTime = Utils.time(() -> {
             long output = query.nativeImpl((Long) id);
+            csvLine.append(",").append(output);
             System.out.println("Native output: " + output);
         }, false);
         System.out.println("Native time: " + nativeTime + "ms");
@@ -282,16 +283,16 @@ public class Benchmark {
             used[(int) child] = true;
             var predecessors = swhGraph.predecessors(child);
             long parent;
-            long min = Long.MAX_VALUE;
+            long res = 0;
             while ((parent = predecessors.nextLong()) != -1) {
                 if (!used[(int) parent]) {
                     if (swhGraph.getNodeType(parent) == Node.Type.REV) {
-                        min = Math.min(min, swhGraph.getAuthorTimestamp(parent));
+                        long authorTimestamp = swhGraph.getAuthorTimestamp(parent);
                     }
-                    min = Math.min(min, dfsVertices(parent, used));
+                    res += dfsVertices(parent, used);
                 }
             }
-            return min;
+            return res + 1;
         }
     }
 

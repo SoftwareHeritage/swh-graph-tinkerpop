@@ -21,9 +21,8 @@ public class Query {
      * @implNote uses DFS to traverse the graph, keeps visited vertices in a {@code HashSet}.
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> leaves(long root) {
-        return g -> g.withSideEffect("a", new HashSet<>())
-                     .V(root)
-                     .repeat(__.out().dedup().where(P.without("a")).aggregate("a"))
+        return g -> g.V(root)
+                     .repeat(__.out().dedup())
                      .until(__.not(__.out()));
     }
 
@@ -34,9 +33,8 @@ public class Query {
      * @return all containing revision vertices.
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> containingRevisions(long v) {
-        return g -> g.withSideEffect("a", new HashSet<>())
-                     .V(v)
-                     .repeat(__.in().dedup().where(P.without("a")).aggregate("a"))
+        return g -> g.V(v)
+                     .repeat(__.in().dedup())
                      .emit(__.hasLabel("REV"))
                      .dedup();
     }
@@ -69,9 +67,8 @@ public class Query {
      * @return an origin vertex.
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> originOfRevision(long revision) {
-        return g -> g.withSideEffect("a", new HashSet<>())
-                     .V(revision)
-                     .repeat(__.in().dedup().where(P.without("a")).aggregate("a"))
+        return g -> g.V(revision)
+                     .repeat(__.in().dedup())
                      .until(__.hasLabel("ORI"));
     }
 
@@ -83,9 +80,8 @@ public class Query {
      * @return all containing revision vertices.
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> revisionsEarlierThan(long v, long max) {
-        return g -> g.withSideEffect("a", new HashSet<>())
-                     .V(v)
-                     .repeat(__.in().dedup().where(P.without("a")).aggregate("a"))
+        return g -> g.V(v)
+                     .repeat(__.in().dedup())
                      .emit(__.hasLabel("REV").has("author_timestamp", P.lt(max)))
                      .dedup();
     }
