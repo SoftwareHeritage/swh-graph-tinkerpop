@@ -167,6 +167,11 @@ public class Benchmark {
         StringBuilder csvLine = new StringBuilder(id.toString());
         Path idDir = dir.resolve(id.toString());
         Files.createDirectories(idDir);
+        long nativeTime = Utils.time(() -> {
+            long output = query.nativeImpl((Long) id);
+            System.out.println("Native output: " + output);
+        }, false);
+        System.out.println("Native time: " + nativeTime + "ms");
         for (int i = 0; i < iters; i++) {
             System.out.println(i + 1 + "/" + iters);
             TraversalMetrics metrics = profile(query.getQuery().apply(id));
@@ -186,11 +191,6 @@ public class Benchmark {
             System.out.println("Finished in: " + durationMs + "ms. Results: " + elements);
             totalMsPerId += durationMs;
         }
-        long nativeTime = Utils.time(() -> {
-            long output = query.nativeImpl((Long) id);
-            System.out.println("Native output: " + output);
-        }, false);
-        System.out.println("Native time: " + nativeTime + "ms");
         csvLine.append(",").append(nativeTime);
         long memory = Utils.getHeapMemoryUsage();
         csvLine.append(",").append(memory);
