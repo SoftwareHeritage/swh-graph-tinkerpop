@@ -2,7 +2,6 @@ package org.softwareheritage.graph.tinkerpop;
 
 import com.martiansoftware.jsap.*;
 import it.unimi.dsi.big.webgraph.LazyLongIterator;
-import it.unimi.dsi.fastutil.longs.LongLongImmutablePair;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -14,11 +13,10 @@ import org.softwareheritage.graph.SwhBidirectionalGraph;
 import org.softwareheritage.graph.labels.DirEntry;
 import org.webgraph.tinkerpop.GremlinQueryExecutor;
 import org.webgraph.tinkerpop.structure.WebGraphGraph;
-import org.webgraph.tinkerpop.structure.provider.SimpleWebGraphPropertyProvider;
+import org.webgraph.tinkerpop.structure.provider.WebGraphPropertyProvider;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,7 +33,6 @@ import java.util.function.Supplier;
 public class Benchmark {
 
     private static final String EXAMPLE = "src/main/resources/example/example";
-    private static final String PYTHON_3K = "src/main/resources/python3kcompress/graph";
 
     private final WebGraphGraph graph;
     private final SwhBidirectionalGraph swhGraph;
@@ -55,7 +52,7 @@ public class Benchmark {
         SimpleJSAP jsap = new SimpleJSAP(Benchmark.class.getName(),
                 "Server to load and query a compressed graph representation of Software Heritage archive.",
                 new Parameter[]{
-                        new FlaggedOption("graphPath", JSAP.STRING_PARSER, PYTHON_3K, JSAP.NOT_REQUIRED, 'g', "path",
+                        new FlaggedOption("graphPath", JSAP.STRING_PARSER, EXAMPLE, JSAP.NOT_REQUIRED, 'g', "path",
                                 "The basename of the compressed graph."),
                         new FlaggedOption("query", JSAP.STRING_PARSER, null, JSAP.REQUIRED, 'q', "query",
                                 "The query to  profile."),
@@ -90,7 +87,7 @@ public class Benchmark {
         swhGraph.loadLabelNames();
         swhGraph.loadAuthorTimestamps();
 
-        SimpleWebGraphPropertyProvider swh = SwhProperties.withEdgeLabels(swhGraph);
+        WebGraphPropertyProvider swh = SwhProperties.withEdgeLabels(swhGraph);
         WebGraphGraph graph = WebGraphGraph.open(swhGraph, swh, path, vcache, ecache);
         Benchmark benchmark = new Benchmark(graph, swhGraph, samples, iters);
         System.out.println("Done");
@@ -106,7 +103,7 @@ public class Benchmark {
         this.e = new GremlinQueryExecutor(graph);
     }
 
-    private <S, E> void profileVertexQuery(List<Long> startIds, BenchmarkQuery query, boolean printMetrics) throws IOException {
+    private void profileVertexQuery(List<Long> startIds, BenchmarkQuery query, boolean printMetrics) throws IOException {
         System.out.println("Profiling query for ids: " + startIds + "\n");
         Path dir = Path.of("benchmarks")
                        .resolve(Instant.now().truncatedTo(ChronoUnit.SECONDS).toString() + "-" + query.getName());
@@ -130,7 +127,7 @@ public class Benchmark {
         }
         for (int i = 0; i < startIds.size(); i++) {
             long id = startIds.get(i);
-            System.out.printf("Running query for id: %d (%d/%d)%n", id, i + 1, startIds.size());
+            System.out.printf("Running query for id: %d (%d/%d) ", id, i + 1, startIds.size());
 
             Stats stat = statsForQuery(query, id, iters, printMetrics, dir);
             long average = stat.average;
