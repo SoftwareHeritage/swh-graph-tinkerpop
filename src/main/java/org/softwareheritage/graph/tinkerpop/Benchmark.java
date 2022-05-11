@@ -129,7 +129,7 @@ public class Benchmark {
         }
         for (int i = 0; i < startIds.size(); i++) {
             long id = startIds.get(i);
-            System.out.printf("Running query for id: %d (%d/%d) ", id, i + 1, startIds.size());
+            System.out.printf("Running query for id: %d (%d/%d)%n", id, i + 1, startIds.size());
 
             Stats stat = statsForQuery(query, id, iters, printMetrics, dir);
             long average = stat.average;
@@ -173,7 +173,7 @@ public class Benchmark {
         }, false);
         System.out.println("Native time: " + nativeTime + "ms");
         for (int i = 0; i < iters; i++) {
-            System.out.println(i + 1 + "/" + iters);
+            System.out.print(i + 1 + "/" + iters + " ");
             TraversalMetrics metrics = profile(query.getQuery().apply(id));
             if (printMetrics) {
                 System.out.println(metrics);
