@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Benchmark {
 
@@ -350,10 +352,10 @@ public class Benchmark {
 
         @Override
         public long nativeImpl(long id) {
-            return dfsVertices(id, new boolean[50_000_000], "");
+            return dfsVertices(id, new boolean[50_000_000], new ArrayList<>());
         }
 
-        private long dfsVertices(long parent, boolean[] used, String path) {
+        private long dfsVertices(long parent, boolean[] used, List<Long> path) {
             used[(int) parent] = true;
             if (swhGraph.getNodeType(parent) == Node.Type.REV) {
                 LazyLongIterator successors = swhGraph.successors(parent);
@@ -373,8 +375,12 @@ public class Benchmark {
                     if (swhGraph.getNodeType(child) == Node.Type.DIR || swhGraph.getNodeType(child) == Node.Type.CNT) {
                         for (DirEntry dirEntry : label) {
                             res++;
-                            String path1 = path + "/" + new String(swhGraph.getLabelName(dirEntry.filenameId));
-//                        System.out.println(path1);
+                            String pp = Stream.concat(path.stream(), Stream.of(dirEntry.filenameId))
+                                              .map(labelId -> new String(swhGraph.getLabelName(labelId)))
+                                              .collect(Collectors.joining("/"));
+//                            System.out.println(pp);
+                            List<Long> path1 = new ArrayList<>(path);
+                            path1.add(dirEntry.filenameId);
                             res += dfsVertices(child, used, path1);
                         }
                     } else {
