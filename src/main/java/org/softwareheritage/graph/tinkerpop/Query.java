@@ -5,7 +5,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Path;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.T;
@@ -13,6 +12,8 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import java.util.*;
 import java.util.function.Function;
+
+import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.*;
 
 public class Query {
     /**
@@ -22,8 +23,8 @@ public class Query {
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> leaves(long root) {
         return g -> g.V(root)
-                     .repeat(__.out().dedup())
-                     .until(__.not(__.out()));
+                     .repeat(out().dedup())
+                     .until(not(out()));
     }
 
     /**
@@ -34,8 +35,8 @@ public class Query {
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> containingRevisions(long v) {
         return g -> g.V(v)
-                     .repeat(__.in().dedup())
-                     .emit(__.hasLabel("REV"))
+                     .repeat(in().dedup())
+                     .emit(hasLabel("REV"))
                      .dedup();
     }
 
@@ -68,8 +69,8 @@ public class Query {
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> originOfRevision(long revision) {
         return g -> g.V(revision)
-                     .repeat(__.in().dedup())
-                     .until(__.hasLabel("ORI"));
+                     .repeat(in().dedup())
+                     .until(hasLabel("ORI"));
     }
 
     /**
@@ -81,8 +82,8 @@ public class Query {
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Vertex>> revisionsEarlierThan(long v, long max) {
         return g -> g.V(v)
-                     .repeat(__.in().dedup())
-                     .emit(__.hasLabel("REV").has("author_timestamp", P.lt(max)))
+                     .repeat(in().dedup())
+                     .emit(hasLabel("REV").has("author_timestamp", P.lt(max)))
                      .dedup();
     }
 
@@ -95,10 +96,10 @@ public class Query {
      * @return paths from revision/directory to leaves.
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Path>> revisionContentPaths(long root) {
-        return g -> g.V(root).choose(__.hasLabel("REV"), __.out().hasLabel("DIR"))
-                     .repeat(__.outE()
-                               .inV().choose(__.hasLabel("REV"), __.out().hasLabel("DIR")))
-                     .emit(__.hasLabel("DIR", "CNT"))
+        return g -> g.V(root).choose(hasLabel("REV"), out().hasLabel("DIR"))
+                     .repeat(outE()
+                             .inV().choose(hasLabel("REV"), out().hasLabel("DIR")))
+                     .emit(hasLabel("DIR", "CNT"))
                      .path();
     }
 
@@ -111,9 +112,9 @@ public class Query {
      */
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, String>> recursiveContentPathsWithPermissions(long revision) {
         return revisionContentPaths(revision).andThen(paths ->
-                paths.map(__.unfold()
-                            .<SwhProperties.DirEntryString[]>values("dir_entry_str")
-                            .fold())
+                paths.map(unfold()
+                             .<SwhProperties.DirEntryString[]>values("dir_entry_str")
+                             .fold())
                      .flatMap(path -> {
                          List<SwhProperties.DirEntryString[]> pathDirs = path.get();
                          StringBuilder dir = new StringBuilder();
@@ -144,10 +145,10 @@ public class Query {
     public static Function<GraphTraversalSource, GraphTraversal<Vertex, Edge>> snapshotRevisions(long snapshot) {
         return g -> g.withSideEffect("e", new HashSet<>())
                      .V(snapshot)
-                     .repeat(__.outE().where(P.without("e"))
-                               .where(__.inV().hasLabel("REV", "REL"))
-                               .aggregate("e")
-                               .inV().dedup())
+                     .repeat(outE().where(P.without("e"))
+                                   .where(inV().hasLabel("REV", "REL"))
+                                   .aggregate("e")
+                                   .inV().dedup())
                      .<Edge>cap("e")
                      .unfold();
     }
