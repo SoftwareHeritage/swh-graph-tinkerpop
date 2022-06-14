@@ -14,14 +14,16 @@ Installing `webgraph-tinkerpop`:
 
 ```shell
 git clone https://github.com/SoftwareHeritage/webgraph-tinkerpop.git
+cd webgraph-tinkerpop
 mvn install
 ```
 
-Installing `swh-graph` version `0.6.0`:
+Installing `swh-graph` version `0.6.1`:
 ```shell
 git clone https://forge.softwareheritage.org/source/swh-graph.git
+cd swh-graph/java
 mvn package -Dmaven.javadoc.skip=true -Dmaven.test.skip=true
-mvn install:install-file -Dfile=target/swh-graph-0.6.0.jar -DgroupId=org.softwareheritage.graph -DartifactId=swh-graph -Dversion=0.6.0 -Dpackaging=jar
+mvn install:install-file -Dfile=target/swh-graph-0.6.1.jar -DgroupId=org.softwareheritage.graph -DartifactId=swh-graph -Dversion=0.6.1 -Dpackaging=jar
 ```
 
 To build the library:
@@ -51,7 +53,7 @@ ________________
 Running Gremlin queries on an SWH graph:
 
 ```shell
-java -cp target/*.jar org.webgraph.tinkerpop.server.Server <graph_path> <query> [--profile]
+java -cp target/*.jar org.softwareheritage.graph.tinkerpop.Server <graph_path> <query> [--profile]
 ```
 * `graph_path` - path to the graph folder
 * `query` - a Gremlin query to execute on the graph
