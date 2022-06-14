@@ -50,7 +50,7 @@ ________________
 
 ## Server
 
-Running Gremlin queries on an SWH graph:
+Running Gremlin queries on an SWH graph (Java 11):
 
 ```shell
 java -cp target/*.jar org.softwareheritage.graph.tinkerpop.Server <graph_path> <query> [--profile]
@@ -61,7 +61,7 @@ java -cp target/*.jar org.softwareheritage.graph.tinkerpop.Server <graph_path> <
 
 ## Benchmarker
 
-To run the benchmarker:
+To run the benchmarker (Java 11):
 
 ```shell
 java -cp target/*.jar org.softwareheritage.graph.tinkerpop.Benchmark <options>
@@ -74,7 +74,7 @@ Available options:
 * `--argument <argument>` - if present, profiles the query with the argument, instead of doing iterations
 * * `--print` - if present, prints the query outputs
 
-Example:
+Example (Java 11):
 ```shell
 java -cp target/*.jar org.softwareheritage.graph.tinkerpop.Benchmark --path src/main/resources/example/example --query recursiveContentPathsWithPermissions --iters 3 --samples 100
 ```
