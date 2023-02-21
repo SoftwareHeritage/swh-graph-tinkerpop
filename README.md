@@ -72,7 +72,7 @@ Available options:
 * `--samples <samples>` - the number of samples to run the query on
 * `--iters <iters>` - the number of iterations per sample
 * `--argument <argument>` - if present, profiles the query with the argument, instead of doing iterations
-* * `--print` - if present, prints the query outputs
+* `--print` - if present, prints the query outputs
 
 Example (Java 11):
 ```shell
