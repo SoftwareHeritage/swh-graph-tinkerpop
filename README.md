@@ -34,7 +34,7 @@ ________________
 
 
 ## Properties
-In [SwhProperties.java](https://github.com/SoftwareHeritage/swh-graph-tinkerpop/blob/master/src/main/java/org/softwareheritage/graph/tinkerpop/SwhProperties.java) you can find all regiestered properties.
+In [SwhProperties.java](https://github.com/SoftwareHeritage/swh-graph-tinkerpop/blob/master/src/main/java/org/softwareheritage/graph/tinkerpop/SwhProperties.java) you can find all registered properties.
 These include:
 
 | Key  | Type | Description |
